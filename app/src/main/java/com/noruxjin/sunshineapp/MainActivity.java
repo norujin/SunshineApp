@@ -1,21 +1,26 @@
 package com.noruxjin.sunshineapp;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,7 +45,19 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 DownloadTask task = new DownloadTask();
-                task.execute("http://openweathermap.org/data/2.5/weather?q="+ city.getText().toString() +"&appid=b1b15e88fa797225412429c1c50c122a1");
+                try {
+                    String encodeCityName = URLEncoder.encode(city.getText().toString(), "UTF-8");
+
+                task.execute("https://openweathermap.org/data/2.5/weather?q="+encodeCityName+"&appid=b6907d289e10d714a6e88b30761fae22");
+
+                InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                manager.hideSoftInputFromWindow(city.getWindowToken(),0);
+
+                } catch (UnsupportedEncodingException e) {
+
+                    Toast.makeText(getApplicationContext(),"Could not find weather",Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
 
             }
         });
@@ -73,6 +90,9 @@ public class MainActivity extends AppCompatActivity {
 
             } catch (Exception e) {
                 e.printStackTrace();
+
+                Toast.makeText(getApplicationContext(),"Could not find weather",Toast.LENGTH_LONG).show();
+
                 return null;
             }
         }
@@ -90,14 +110,35 @@ public class MainActivity extends AppCompatActivity {
 
                 JSONArray arr = new JSONArray(weatherInfo);
 
+                String message= "";
+
                 for (int i=0; i < arr.length(); i++) {
                     JSONObject jsonPart = arr.getJSONObject(i);
 
-                    Log.i("main",jsonPart.getString("main"));
-                    Log.i("description",jsonPart.getString("description"));
+                    String main = jsonPart.getString("main");
+                    String description = jsonPart.getString("description");
+
+                    if (!main.equals("") && !description.equals("")){
+
+                        message += main + " : " + description + "\r\n";
+
+                    }
+                }
+
+                if (!message.equals("")){
+
+                    result.setText(message);
+
+                } else {
+
+                    Toast.makeText(getApplicationContext(),"Could not find weather",Toast.LENGTH_LONG).show();
+
                 }
 
             } catch (Exception e) {
+
+                Toast.makeText(getApplicationContext(),"Could not find weather",Toast.LENGTH_LONG).show();
+
                 e.printStackTrace();
             }
 
